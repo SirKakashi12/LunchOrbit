@@ -9,6 +9,46 @@ function display_username():void{
         "UTF-8"
     );
 }
+
+
+function check_profile_errors(): void
+{
+    // Validation errors
+    if (isset($_SESSION["errors_profile"])) {
+
+        $errors = $_SESSION["errors_profile"];
+
+        echo '<div class="profile-alert" role="alert">';
+
+        foreach ($errors as $key => $value) {
+            echo '<p class="profile-error">'
+                . htmlspecialchars((string) $key, ENT_QUOTES, 'UTF-8')
+                . ' : '
+                . htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8')
+                . '</p>';
+        }
+
+        echo '</div>';
+
+        unset($_SESSION["errors_profile"]);
+    } else if (isset($_GET["profile"]) && $_GET["profile"] === "success") {
+      echo '<div class="profile-alert" role="alert">';
+      echo '<p class="success-message"> Congratiolation Regestration is a Successfull Please Login </p>';
+      echo '</div>';
+    
+    }  
+    // Incomplete company profile warning
+    if (
+        isset($_SESSION["profileInfo"]["companyProfileIncomplete"]) &&
+        $_SESSION["profileInfo"]["companyProfileIncomplete"] === true
+    ) {
+        echo '<div class="profile-alert" role="alert">';
+        echo '<p class="profile-warning">';
+        echo 'Your company profile is incomplete.Your A New member pls go to Company Profile Page.';
+        echo '</p>';
+        echo '</div>';
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -28,7 +68,9 @@ function display_username():void{
 
         <!-- Main Area -->
         <main class="main-area">
-
+            <?php
+                check_profile_errors();
+            ?>
             <!-- Topbar -->
             <header class="topbar">
 
@@ -39,8 +81,8 @@ function display_username():void{
 
                 <div class="account-info">
                     <div class="account-avatar">
-                        R
-                    </div>
+                          <?php echo strtoupper(substr($_SESSION["user_username"] ?? "R", 0, 1)); ?>
+                   </div>
 
                     <div>
                         <strong><?php display_username(); ?></strong>
@@ -104,5 +146,8 @@ document.querySelectorAll(".profile-table").forEach(table => {
     });
 
 });
-
 </script>
+<?php
+unset($_SESSION["profileInfo"]);
+unset($_SESSION["errors_profile"])
+?>

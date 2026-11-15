@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' ) {
         }
 
         if($result["role"] === "recruiter"){
-            header("Location: ../recruiters/view.php");
+            header("Location: ../recruiters/view.php?page=dashboard");
             exit(); 
         }
 

@@ -535,3 +535,62 @@ button.nav-link.logout:hover {
         padding: 9px 12px;
     }
 }
+
+
+
+/* Profile Alerts */
+
+.profile-alert {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+
+    width: min(350px, calc(100% - 40px));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.profile-error,
+.profile-warning {
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 0;
+    overflow-wrap: anywhere;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.profile-error {
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+}
+
+.profile-warning {
+    background-color: #fff3cd;
+    color: #664d03;
+    border: 1px solid #ffecb5;
+}
+
+.success-message {
+  background-color: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #badbcc;
+  border-radius: 8px;
+
+  padding: 12px 16px;
+  margin: 0;
+
+  overflow-wrap: anywhere;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+
+@media (max-width: 480px) {
+    .profile-alert {
+        top: 10px;
+        right: 10px;
+        width: calc(100% - 20px);
+    }
+}
