@@ -4,8 +4,6 @@ declare(strict_types=1);
 require_once "../private/session.php";
 
 
-
-
 function signup_inputs(): void
 {
     $inputs = $_SESSION["signup_inputs"] ?? [];
@@ -72,7 +70,6 @@ function check_signup_errors(): void
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lunch Orbit</title>
-  <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -88,7 +85,7 @@ function check_signup_errors(): void
 
         <p style="color: black;">
           Already have an account?
-        <a href="">Log in</a>            
+        <a href="../signIn/view.php">Log in</a>            
         </p>
 
 
@@ -106,7 +103,7 @@ function check_signup_errors(): void
 
         <p style="color: black;">
           Already have an account?
-        <a href="">Log in</a>            
+        <a href="../signIn/view.php">Log in</a>            
         </p>
 
       </form>

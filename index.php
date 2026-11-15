@@ -1,3 +1,3 @@
 <?php
-require_once "signUp/view.php";
+require_once __DIR__  . "/signUp/view.php";
 ?>
