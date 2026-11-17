@@ -182,36 +182,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST["navigate"])) {
 
     if ($page === "company" || $page === "dashboard") {
 
-        require_once '../private/database.php';
-        require_once 'model.php';
+        try {
+            require_once '../private/database.php';
+            require_once 'model.php';
+            require_once 'contr.php';
 
-        if (!isset($_SESSION["user_id"])) {
-            header("Location: ../signIn/view.php");
-            exit();
+            if (!isset($_SESSION["user_id"])) {
+                header("Location: ../signIn/view.php");
+                exit();
+            }
+
+            $user_id = (int) $_SESSION["user_id"];
+
+            $userInfo = get_recruiter_user_info($pdo, $user_id);
+            $companyInfo = get_recruiter_company_info($pdo, $user_id);
+
+            $profileInfo = [
+                "username" => $userInfo["username"] ?? "",
+                "lastupdate" => $userInfo["created_at"] ?? "",
+                "fullname" => $userInfo["fullname"] ?? "",
+                "email" => $userInfo["email"] ?? "",
+                "cellno" => $userInfo["cellno"] ?? "",
+
+                "companyName" => $companyInfo["companyName"] ?? "",
+                "companyCreatedAt" => $companyInfo["created_at"] ?? "",
+                "companyWebsite" => $companyInfo["companyWebsite"] ?? "",
+                "companyNumber" => $companyInfo["companyNumber"] ?? "",
+                "positionInCompany" => $companyInfo["PositioninCompany"] ?? "",
+
+                "companyProfileIncomplete" => ($companyInfo === false)
+            ];
+
+            $_SESSION["profileInfo"] = $profileInfo;
+        } catch (Exception $e) {
+            die("Query Faild: " . $e->getMessage());
+            
         }
+        
+    }
 
-        $user_id = (int) $_SESSION["user_id"];
+    if ($page === "jobs" || $page === "dashboard") { 
 
-        $userInfo = get_recruiter_user_info($pdo, $user_id);
-        $companyInfo = get_recruiter_company_info($pdo, $user_id);
+        try {
+            require_once '../private/database.php';
+            require_once 'model.php';
+            require_once 'contr.php';
 
-        $profileInfo = [
-            "username" => $userInfo["username"] ?? "",
-            "lastupdate" => $userInfo["created_at"] ?? "",
-            "fullname" => $userInfo["fullname"] ?? "",
-            "email" => $userInfo["email"] ?? "",
-            "cellno" => $userInfo["cellno"] ?? "",
+            if (!isset($_SESSION["user_id"])) {
+                header("Location: ../signIn/view.php");
+                exit();
+            }
 
-            "companyName" => $companyInfo["companyName"] ?? "",
-            "companyCreatedAt" => $companyInfo["created_at"] ?? "",
-            "companyWebsite" => $companyInfo["companyWebsite"] ?? "",
-            "companyNumber" => $companyInfo["companyNumber"] ?? "",
-            "positionInCompany" => $companyInfo["PositioninCompany"] ?? "",
+            $user_id = (int) $_SESSION["user_id"];
 
-            "companyProfileIncomplete" => ($companyInfo === false)
-        ];
+            $_SESSION["jobPostingData"] = get_recruiter_job_posting_data($pdo, $user_id);
 
-        $_SESSION["profileInfo"] = $profileInfo;
+        } catch (Exception $e) {
+            die("Query Faild: " . $e->getMessage());
+            
+        }
     }
 
     header("Location: view.php?page=" . urlencode($page));
@@ -253,5 +282,196 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST["company_update"])) {
     }
 }
 
-header("Location: view.php");
-exit();
+
+
+// job posting
+
+$isJobGet = $_SERVER["REQUEST_METHOD"] === "GET"
+    && (($_GET["page"] ?? "") === "jobpost");
+
+$isJobSave = $_SERVER["REQUEST_METHOD"] === "POST"
+    && isset($_POST["job_status"]);
+
+$isJobClose = $_SERVER["REQUEST_METHOD"] === "POST"
+    && (($_POST["job_action"] ?? "") === "close");
+
+$isJobDelete = $_SERVER["REQUEST_METHOD"] === "POST"
+    && (($_POST["job_action"] ?? "") === "delete");
+
+if ($isJobGet || $isJobSave || $isJobClose || $isJobDelete) {
+
+    if (!isset($_SESSION["user_id"])) {
+        header("Location: ../signIn/view.php");
+        exit();
+    }
+
+    try {
+        require_once "../private/database.php";
+        require_once "model.php";
+        require_once "contr.php";
+
+        $user_id = (int) $_SESSION["user_id"];
+
+        if ($isJobSave || ($isJobGet && (($_GET["job_action"] ?? "") === "create"))) {
+            if (get_recruiter_id_by_user($pdo, $user_id) === false) {
+                $userInfo = get_recruiter_user_info($pdo, $user_id);
+                $companyInfo = get_recruiter_company_info($pdo, $user_id);
+
+                $_SESSION["profileInfo"] = [
+                    "username" => $userInfo["username"] ?? "",
+                    "lastupdate" => $userInfo["created_at"] ?? "",
+                    "fullname" => $userInfo["fullname"] ?? "",
+                    "email" => $userInfo["email"] ?? "",
+                    "cellno" => $userInfo["cellno"] ?? "",
+
+                    "companyName" => $companyInfo["companyName"] ?? "",
+                    "companyCreatedAt" => $companyInfo["created_at"] ?? "",
+                    "companyWebsite" => $companyInfo["companyWebsite"] ?? "",
+                    "companyNumber" => $companyInfo["companyNumber"] ?? "",
+                    "positionInCompany" => $companyInfo["PositioninCompany"] ?? "",
+
+                    "companyProfileIncomplete" => ($companyInfo === false)
+                ];
+
+                $_SESSION["errors_profile"] = [
+                    "company_profile" => "Finish your company profile before posting a job."
+                ];
+
+                header("Location: view.php?page=company");
+                exit();
+            }
+        }
+
+        if ($isJobSave) {
+            $jobId = (int) ($_POST["job_id"] ?? 0);
+            $validated = validate_job_post_form($_POST);
+
+            if (!empty($validated["errors"])) {
+                $_SESSION["errors_job"] = $validated["errors"];
+                $_SESSION["jobFormInput"] = $validated["form"];
+
+                $formAction = $jobId > 0 ? "edit" : "create";
+                $location = "view.php?page=jobpost&job_action=" . $formAction;
+
+                if ($jobId > 0) {
+                    $location .= "&job_id=" . $jobId;
+                }
+
+                header("Location: " . $location);
+                exit();
+            }
+
+            if ($jobId > 0 && get_owned_job_post($pdo, $user_id, $jobId) === false) {
+                $_SESSION["errors_job"] = [
+                    "job_missing" => "That job could not be found."
+                ];
+                $_SESSION["jobPostingData"] = get_recruiter_job_posting_data($pdo, $user_id);
+                unset($_SESSION["jobFormInput"]);
+
+                header("Location: view.php?page=jobs");
+                exit();
+            }
+
+            $recruiterId = get_recruiter_id_by_user($pdo, $user_id);
+
+            $pdo->beginTransaction();
+
+            if ($jobId > 0) {
+                update_owned_job_post($pdo, $user_id, $jobId, $validated["job"]);
+            } else {
+                $jobId = insert_job_post($pdo, (int) $recruiterId, $validated["job"]);
+            }
+
+            replace_job_skills($pdo, $jobId, $validated["skills"]);
+            $pdo->commit();
+
+            unset($_SESSION["jobFormInput"], $_SESSION["errors_job"]);
+            $_SESSION["jobPostingData"] = get_recruiter_job_posting_data($pdo, $user_id);
+            $_SESSION["job_notice"] = $validated["job"]["status"] === "published"
+                ? "Job published."
+                : "Job saved as draft.";
+
+            header("Location: view.php?page=jobs");
+            exit();
+        }
+
+        if ($isJobClose || $isJobDelete) {
+            $jobId = (int) ($_POST["job_id"] ?? 0);
+            $ownedJob = $jobId > 0 ? get_owned_job_post($pdo, $user_id, $jobId) : false;
+
+            if ($ownedJob === false) {
+                $_SESSION["errors_job"] = [
+                    "job_missing" => "That job could not be found."
+                ];
+                $_SESSION["jobPostingData"] = get_recruiter_job_posting_data($pdo, $user_id);
+                unset($_SESSION["jobFormInput"]);
+
+                header("Location: view.php?page=jobs");
+                exit();
+            }
+
+            if ($isJobDelete) {
+                delete_owned_job_post($pdo, $user_id, $jobId);
+                unset($_SESSION["currentJobPost"], $_SESSION["jobFormInput"], $_SESSION["errors_job"]);
+                $_SESSION["jobPostingData"] = get_recruiter_job_posting_data($pdo, $user_id);
+                $_SESSION["job_notice"] = "Job deleted.";
+
+                header("Location: view.php?page=jobs");
+                exit();
+            }
+
+            update_owned_job_status($pdo, $user_id, $jobId, "closed");
+            $_SESSION["currentJobPost"] = build_current_job_post($pdo, $user_id, $jobId);
+            unset($_SESSION["jobFormInput"], $_SESSION["errors_job"]);
+            $_SESSION["jobPostingData"] = get_recruiter_job_posting_data($pdo, $user_id);
+            $_SESSION["job_notice"] = "Job closed.";
+
+            header("Location: view.php?page=jobpost&job_action=view&job_id=" . $jobId);
+            exit();
+        }
+
+        $jobAction = (string) ($_GET["job_action"] ?? "");
+
+        if ($jobAction === "create") {
+            $_SESSION["currentJobPost"] = empty_job_post_form();
+            unset($_SESSION["jobFormInput"], $_SESSION["errors_job"]);
+
+            header("Location: view.php?page=jobpost&job_action=create");
+            exit();
+        }
+
+        if ($jobAction === "edit" || $jobAction === "view") {
+            $jobId = (int) ($_GET["job_id"] ?? 0);
+            $currentJob = $jobId > 0 ? build_current_job_post($pdo, $user_id, $jobId) : false;
+
+            if ($currentJob === false) {
+                $_SESSION["errors_job"] = [
+                    "job_missing" => "That job could not be found."
+                ];
+                $_SESSION["jobPostingData"] = get_recruiter_job_posting_data($pdo, $user_id);
+                unset($_SESSION["jobFormInput"]);
+
+                header("Location: view.php?page=jobs");
+                exit();
+            }
+
+            $_SESSION["currentJobPost"] = $currentJob;
+            unset($_SESSION["jobFormInput"], $_SESSION["errors_job"]);
+
+            header("Location: view.php?page=jobpost&job_action=" . $jobAction . "&job_id=" . $jobId);
+            exit();
+        }
+
+        header("Location: view.php?page=jobs");
+        exit();
+
+    } catch (Exception $e) {
+        if (isset($pdo) && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        die("Query Faild: " . $e->getMessage());
+    }
+}
+
+

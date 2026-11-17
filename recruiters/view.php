@@ -100,6 +100,7 @@ function check_profile_errors(): void
                     <?php 
                      require_once "dashboard.php"; 
                      require_once "profile.php"; 
+                     require_once "jobposting.php"; 
 
 
                      ?>
@@ -146,6 +147,59 @@ document.querySelectorAll(".profile-table").forEach(table => {
     });
 
 });
+
+
+
+function addSkill() {
+    const input = document.getElementById("new-skill");
+    const skillName = input.value.trim();
+
+    if (skillName === "") {
+        input.focus();
+        return;
+    }
+
+    const container = document.getElementById("skills-container");
+
+    const skillItem = document.createElement("div");
+    skillItem.className = "skill-item";
+
+    const skillInput = document.createElement("input");
+    skillInput.type = "text";
+    skillInput.name = "skills[]";
+    skillInput.value = skillName;
+    skillInput.required = true;
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "skill-remove";
+    removeButton.innerHTML = "&times;";
+    removeButton.onclick = function () {
+        removeSkill(this);
+    };
+
+    skillItem.appendChild(skillInput);
+    skillItem.appendChild(removeButton);
+
+    container.appendChild(skillItem);
+
+    input.value = "";
+    input.focus();
+}
+
+function removeSkill(button) {
+    button.closest(".skill-item").remove();
+}
+
+// Allow Enter to add a skill
+document.getElementById("new-skill")?.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        addSkill();
+    }
+});
+
+
 </script>
 <?php
 unset($_SESSION["profileInfo"]);
