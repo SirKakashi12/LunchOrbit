@@ -2,6 +2,23 @@
 declare(strict_types=1);
 require_once "../private/session.php";
 
+$page = (string) ($_GET["page"] ?? "");
+
+if ($page === "dashboard") {
+    if (!isset($_SESSION["user_id"])) {
+        header("Location: ../signIn/view.php");
+        exit();
+    }
+
+    require_once "../private/database.php";
+    require_once "model.php";
+
+    $_SESSION["dashboardData"] = get_recruiter_dashboard(
+        $pdo,
+        (int) $_SESSION["user_id"]
+    );
+}
+
 function display_username():void{
     echo htmlspecialchars(
         $_SESSION["user_username"] ?? "Recruiter",
@@ -101,6 +118,7 @@ function check_profile_errors(): void
                      require_once "dashboard.php"; 
                      require_once "profile.php"; 
                      require_once "jobposting.php"; 
+                     require_once "applicant.php"; 
 
 
                      ?>
@@ -121,6 +139,10 @@ document.querySelectorAll(".profile-table").forEach(table => {
     const editBtn = table.querySelector(".edit-btn");
     const updateBtn = table.querySelector(".update-btn");
     const inputs = table.querySelectorAll("input");
+
+    if (!editBtn || !updateBtn) {
+        return;
+    }
 
     editBtn.addEventListener("click", () => {
 
@@ -203,5 +225,11 @@ document.getElementById("new-skill")?.addEventListener("keydown", function(event
 </script>
 <?php
 unset($_SESSION["profileInfo"]);
-unset($_SESSION["errors_profile"])
+unset($_SESSION["errors_profile"]);
+unset($_SESSION["jobPostingData"]);
+unset($_SESSION["currentJobPost"]);
+unset($_SESSION["applicantData"]);
+unset($_SESSION["applicantJobOptions"]);
+unset($_SESSION["applicantProfile"]);
+unset($_SESSION["dashboardData"]);
 ?>

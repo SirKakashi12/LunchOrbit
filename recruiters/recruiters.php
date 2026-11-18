@@ -243,6 +243,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST["navigate"])) {
         }
     }
 
+
+    if ($page === "applicants" || $page === "dashboard") {
+
+        if (!isset($_SESSION["user_id"])) {
+            header("Location: ../signIn/view.php");
+            exit();
+        }
+
+        try {
+
+            require_once '../private/database.php';
+            require_once 'model.php';
+            require_once 'contr.php';
+
+
+            $user_id = (int) $_SESSION["user_id"];
+            $jobFilter = (int) ($_POST["job_filter"] ?? 0);
+
+            if ($jobFilter > 0 && get_owned_job_post($pdo, $user_id, $jobFilter) === false) {
+                $jobFilter = 0;
+            }
+
+            $_SESSION["applicantJobFilter"] = $jobFilter;
+            $_SESSION["applicantJobOptions"] = get_recruiter_job_postings($pdo, $user_id);
+            $_SESSION["applicantData"] = get_recruiter_applicants(
+                $pdo,
+                $user_id,
+                $jobFilter
+            );
+
+        } catch (Exception $e) {
+
+            die("Query Failed: " . $e->getMessage());
+
+        }
+    }
+
+
     header("Location: view.php?page=" . urlencode($page));
     exit();
 }
@@ -470,6 +508,106 @@ if ($isJobGet || $isJobSave || $isJobClose || $isJobDelete) {
             $pdo->rollBack();
         }
 
+        die("Query Faild: " . $e->getMessage());
+    }
+}
+
+$applicantAction = (string) ($_POST["applicant_action"] ?? "");
+$isApplicantView = $_SERVER["REQUEST_METHOD"] === "POST" && $applicantAction === "view";
+$isApplicantDecision = $_SERVER["REQUEST_METHOD"] === "POST"
+    && ($applicantAction === "approve" || $applicantAction === "decline");
+
+if ($isApplicantView || $isApplicantDecision) {
+    if (!isset($_SESSION["user_id"])) {
+        header("Location: ../signIn/view.php");
+        exit();
+    }
+
+    try {
+        require_once "../private/database.php";
+        require_once "model.php";
+        require_once "contr.php";
+
+        $user_id = (int) $_SESSION["user_id"];
+        $applicationId = (int) ($_POST["application_id"] ?? 0);
+        $application = $applicationId > 0
+            ? get_owned_application($pdo, $user_id, $applicationId)
+            : false;
+
+        if ($application === false) {
+            $_SESSION["errors_applicant"] = [
+                "application_missing" => "That application could not be found.",
+            ];
+            $_SESSION["applicantJobOptions"] = get_recruiter_job_postings($pdo, $user_id);
+            $_SESSION["applicantData"] = get_recruiter_applicants(
+                $pdo,
+                $user_id,
+                (int) ($_SESSION["applicantJobFilter"] ?? 0)
+            );
+
+            header("Location: view.php?page=applicants");
+            exit();
+        }
+
+        if ($isApplicantView) {
+            $_SESSION["applicantProfile"] = get_applicant_profile_for_recruiter(
+                $pdo,
+                $user_id,
+                $applicationId
+            );
+
+            header("Location: view.php?page=applicant&application_id=" . $applicationId);
+            exit();
+        }
+
+        if (($application["status"] ?? "") === "withdrawn") {
+            $_SESSION["errors_applicant"] = [
+                "application_withdrawn" => "This applicant already withdrew.",
+            ];
+            header("Location: view.php?page=applicants");
+            exit();
+        }
+
+        $nextStatus = $applicantAction === "approve" ? "accepted" : "rejected";
+        update_owned_application_status($pdo, $user_id, $applicationId, $nextStatus);
+
+        $jobClosed = false;
+        if ($nextStatus === "accepted") {
+            $jobClosed = close_job_when_vacancies_filled(
+                $pdo,
+                $user_id,
+                (int) $application["job_id"]
+            );
+        }
+
+        $jobFilter = (int) ($_SESSION["applicantJobFilter"] ?? 0);
+        $_SESSION["applicantJobOptions"] = get_recruiter_job_postings($pdo, $user_id);
+        $_SESSION["applicantData"] = get_recruiter_applicants($pdo, $user_id, $jobFilter);
+        $_SESSION["applicantProfile"] = get_applicant_profile_for_recruiter(
+            $pdo,
+            $user_id,
+            $applicationId
+        );
+
+        if ($nextStatus === "accepted" && $jobClosed) {
+            $_SESSION["applicant_notice"] = "Applicant approved. "
+                . $application["job_title"]
+                . " is now closed because the approved applicants match the vacancies.";
+        } elseif ($nextStatus === "accepted") {
+            $_SESSION["applicant_notice"] = "Applicant approved.";
+        } else {
+            $_SESSION["applicant_notice"] = "Applicant declined.";
+        }
+
+        $returnPage = (string) ($_POST["return_page"] ?? "applicants");
+        if ($returnPage === "applicant") {
+            header("Location: view.php?page=applicant&application_id=" . $applicationId);
+            exit();
+        }
+
+        header("Location: view.php?page=applicants");
+        exit();
+    } catch (Exception $e) {
         die("Query Faild: " . $e->getMessage());
     }
 }

@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' ) {
 
         //check what role of the user
         if($result["role"] === "job_seeker"){
-            header("Location: ../jobSeekers/view.php");
+            header("Location: ../jobSeekers/view.php?page=dashboard");
             exit(); 
         }
 

@@ -254,7 +254,7 @@ button.nav-link.logout:hover {
 
 .dashboard-cards {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 20px;
     margin-bottom: 25px;
 }
@@ -302,6 +302,41 @@ button.nav-link.logout:hover {
     color: var(--text-secondary);
     font-size: 13px;
     line-height: 1.6;
+}
+
+.analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.analysis-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 28px;
+    gap: 10px;
+    align-items: center;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.analysis-track {
+    height: 8px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.analysis-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 99px;
+}
+
+@media (max-width: 900px) {
+    .analysis-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 
@@ -1073,5 +1108,232 @@ button.nav-link.logout:hover {
 
     .job-listing .job-btn {
         padding: 8px 10px;
+    }
+}
+
+
+/* ==========================
+   APPLICANTS PAGE
+========================== */
+
+.applicant-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+
+    margin-top: 20px;
+
+    box-shadow: 0 2px 8px rgba(37, 40, 59, 0.03);
+}
+
+/* Table Header */
+.applicant-table thead th {
+    padding: 15px 16px;
+
+    background: var(--primary-light);
+    color: var(--primary);
+
+    font-size: 12px;
+    font-weight: bold;
+    text-align: left;
+
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+/* Table Cells */
+.applicant-table tbody td {
+    padding: 16px;
+
+    font-size: 13px;
+    color: var(--text-primary);
+
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+/* Last row */
+.applicant-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Row hover */
+.applicant-table tbody tr:hover {
+    background: #fafaff;
+    transition: 0.2s ease;
+}
+
+/* Applicant Name */
+.applicant-table td strong {
+    display: inline-block;
+    margin-bottom: 4px;
+
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+/* Applicant Email */
+.applicant-table td:first-child br + * {
+    color: var(--text-secondary);
+}
+
+/* Education */
+.applicant-table td:nth-child(3) {
+    line-height: 1.7;
+}
+
+/* Experience */
+.applicant-table td:nth-child(4) {
+    color: var(--text-secondary);
+}
+
+/* Date Applied */
+.applicant-table td:nth-child(5) {
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* Status */
+.applicant-table td:nth-child(6) {
+    font-weight: bold;
+}
+
+.applicant-filter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.applicant-filter label {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.applicant-filter select {
+    min-width: 240px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.applicant-filter button,
+.applicant-table button {
+    padding: 9px 16px;
+
+    background: var(--primary-light);
+    color: var(--primary);
+
+    border: none;
+    border-radius: 7px;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: bold;
+
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.applicant-filter button:hover,
+.applicant-table button:hover {
+    background: #dedaff;
+}
+
+.applicant-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.applicant-actions:first-child {
+    margin-top: 0;
+}
+
+.applicant-table .applicant-approve,
+.applicant-profile-nav + .profile-table .applicant-approve,
+.profile-table .applicant-approve {
+    background: #e7f6ee;
+    color: #198754;
+}
+
+.applicant-table .applicant-decline,
+.profile-table .applicant-decline {
+    background: #fce8eb;
+    color: var(--danger);
+}
+
+.applicant-table .applicant-approve:hover,
+.profile-table .applicant-approve:hover {
+    background: #d3f0e0;
+}
+
+.applicant-table .applicant-decline:hover,
+.profile-table .applicant-decline:hover {
+    background: #f8d7da;
+}
+
+.applicant-profile-nav {
+    margin: 16px 0;
+}
+
+.applicant-muted {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+/* Empty Applicants Message */
+.applicant-table td[colspan="7"] {
+    text-align: center;
+    padding: 35px 20px;
+
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* ==========================
+   APPLICANTS RESPONSIVE
+========================== */
+
+@media (max-width: 1000px) {
+    .applicant-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .applicant-table th,
+    .applicant-table td {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 650px) {
+    .applicant-table {
+        font-size: 12px;
+    }
+
+    .applicant-table th {
+        font-size: 11px;
+    }
+
+    .applicant-table td {
+        padding: 10px;
+    }
+
+    .applicant-table button {
+        padding: 8px 12px;
     }
 }

@@ -133,7 +133,7 @@ if(isset($_GET["page"]) &&  $_GET["page"] === "jobs")
         echo '        </td>';
 
         echo '        <td class="job-id">';
-        echo '            #ID-' . escape_value($listingId);
+        echo '            Job-' . escape_value($listingId);
         echo '        </td>';
 
         echo '        <td  colspan="2" class="job-status ' .
